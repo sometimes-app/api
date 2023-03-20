@@ -1,0 +1,65 @@
+openapi: 3.0.1
+info:
+  title: 'Sometimes, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'
+  version: '1.0'
+paths:
+  /UserInfo:
+    get:
+      tags:
+        - UserInfo
+      operationId: UserInfo
+      parameters:
+        - name: uuid
+          in: header
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+    put:
+      tags:
+        - UserInfo
+      operationId: UserInfo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInfo'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/UserInfo'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/UserInfo'
+      responses:
+        '200':
+          description: Success
+components:
+  schemas:
+    UserInfo:
+      type: object
+      properties:
+        uuid:
+          type: string
+          nullable: true
+        firstName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+          nullable: true
+        userName:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        profilePicUrl:
+          type: string
+          nullable: true
+        friends:
+          type: array
+          items:
+            type: string
+          nullable: true
+      additionalProperties: false
