@@ -1,8 +1,8 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
 using Sometimes.Database.Models;
 using Sometimes.Services;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Sometimes.Controllers;
 
@@ -16,10 +16,14 @@ public class UserInfoController : ControllerBase
     public UserInfoController(ILogger<UserInfoController> logger, IUserInfoService userInfoService)
     {
         this.logger = logger;
-        this.UserInfoService = userInfoService;
+        UserInfoService = userInfoService;
     }
 
     [HttpGet(Name = "UserInfo")]
+    [SwaggerOperation("GetUserInfo")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserInfo))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserInfo([FromHeader] string uuid)
     {
         try
@@ -42,7 +46,10 @@ public class UserInfoController : ControllerBase
     }
 
     [HttpPut(Name = "UserInfo")]
-    public async Task<IActionResult> PutUserInfo([FromBody] UserInfo userInfo)
+    [SwaggerOperation("AddUserInfo")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserInfo))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> AddUserInfo([FromBody] UserInfo userInfo)
     {
         try
         {
