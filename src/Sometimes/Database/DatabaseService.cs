@@ -8,8 +8,8 @@ namespace Sometimes.Database
 {
     public class DatabaseService : IDatabaseService
     {
-        private readonly IMongoCollection<UserInfo> UserInfo;
-        private readonly IMongoCollection<UserMessage> UserMessages;
+        private readonly IMongoCollection<UserInfo> UserInfoCollection;
+        private readonly IMongoCollection<UserMessage> UserMessagesCollection;
 
         public DatabaseService(IOptions<SometimesDbInfo> sometimesDbInfo)
         {
@@ -17,41 +17,71 @@ namespace Sometimes.Database
 
             var mongoDatabase = mongoClient.GetDatabase(sometimesDbInfo.Value.DatabaseName);
 
-            UserInfo = mongoDatabase.GetCollection<UserInfo>(sometimesDbInfo.Value.UserInfoCollectionName);
-            UserMessages = mongoDatabase.GetCollection<UserMessage>(sometimesDbInfo.Value.MessagesCollectionInfo);
+            UserInfoCollection = mongoDatabase.GetCollection<UserInfo>(sometimesDbInfo.Value.UserInfoCollectionName);
+            UserMessagesCollection = mongoDatabase.GetCollection<UserMessage>(sometimesDbInfo.Value.MessagesCollectionInfo);
         }
 
+
         public async Task<List<UserInfo>> GetAllUserInfoAsync() =>
-            await UserInfo.Find(_ => true).ToListAsync();
+            await UserInfoCollection.Find(_ => true).ToListAsync();
 
         public async Task<UserInfo?> GetUserInfoAsync(string id) =>
-            await UserInfo.Find(x => x.UUID == id).FirstOrDefaultAsync();
+            await UserInfoCollection.Find(x => x.UUID == id).FirstOrDefaultAsync();
 
         public async Task CreateUserInfoAsync(UserInfo newUser) =>
-            await UserInfo.InsertOneAsync(newUser);
+            await UserInfoCollection.InsertOneAsync(newUser);
 
         public async Task UpdateUserInfoAsync(string id, UserInfo userInfo) =>
-            await UserInfo.ReplaceOneAsync(x => x.UUID == id, userInfo);
+            await UserInfoCollection.ReplaceOneAsync(x => x.UUID == id, userInfo);
 
         public async Task RemoveUserInfoAsync(string id) =>
-            await UserInfo.DeleteOneAsync(x => x.UUID == id);
+            await UserInfoCollection.DeleteOneAsync(x => x.UUID == id);
 
+        /// <inheritdoc/>
+        public async Task<List<UserInfo>?> GetFriends(string uuid)
+        {
+            var userInfo = await GetUserInfoAsync(uuid);
+            if(userInfo == null)
+            {
+                return null;
+            }
+
+            FilterDefinitionBuilder<UserInfo> friendListFilterBuilder = new();
+            var friendListFilter = friendListFilterBuilder.In(user => user.UUID, userInfo.Friends);
+            return await UserInfoCollection.Find(friendListFilter).ToListAsync();
+        }
+
+        /// <inheritdoc/>
+        public async Task<bool> AddFriend(string userUuid, string friendUuid)
+        {
+            var addFriend = Builders<UserInfo>.Update.AddToSet(user => user.Friends, friendUuid);
+            var result = await UserInfoCollection.UpdateOneAsync(user => user.UUID == userUuid, addFriend);
+            return result.IsAcknowledged;
+        }
+
+        /// <inheritdoc/>
+        public async Task<bool> RemoveFriend(string userUuid, string friendUuid)
+        {
+            var removeFriend = Builders<UserInfo>.Update.Pull(user => user.Friends, friendUuid);
+            var result = await UserInfoCollection.UpdateOneAsync(user => user.UUID == userUuid, removeFriend);
+            return result.IsAcknowledged;
+        }
 
 
         public async Task<List<UserMessage>> GetUserMessagesAsync() =>
-            await UserMessages.Find(_ => true).ToListAsync();
+            await UserMessagesCollection.Find(_ => true).ToListAsync();
 
         public async Task<UserMessage?> GetUserMessagesAsync(string id) =>
-            await UserMessages.Find(x => x.userUUID == id).FirstOrDefaultAsync();
+            await UserMessagesCollection.Find(x => x.userUUID == id).FirstOrDefaultAsync();
 
         public async Task CreateUserMessageAsync(UserMessage newMessage) =>
-            await UserMessages.InsertOneAsync(newMessage);
+            await UserMessagesCollection.InsertOneAsync(newMessage);
 
         public async Task UpdateUserMessageAsync(string id, UserMessage userMessage) =>
-            await UserMessages.ReplaceOneAsync(x => x.userUUID == id, userMessage);
+            await UserMessagesCollection.ReplaceOneAsync(x => x.userUUID == id, userMessage);
 
         public async Task RemoveUserMessageAsync(string id) =>
-            await UserMessages.DeleteOneAsync(x => x.userUUID == id);
+            await UserMessagesCollection.DeleteOneAsync(x => x.userUUID == id);
     }
 }
 

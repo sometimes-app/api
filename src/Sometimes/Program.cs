@@ -31,10 +31,15 @@ internal class Program
         SetupServices(builder);
 
         var app = builder.Build();
+        // comment out and build to generate openapi file
+        app.Urls.Clear();
+        app.Urls.Add("http://localhost:5228");
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
+            var devHostUrl = builder.Configuration.GetValue<string>(Constants.AppSettings.DevHost);
+            app.Urls.Add(devHostUrl);
             app.UseSwagger();
             app.UseSwaggerUI();
         }
@@ -44,6 +49,7 @@ internal class Program
         app.MapControllers();
 
         app.Services.GetService<AppSettingsConfig>();
+        app.UseHttpLogging();
 
         app.Run();
 

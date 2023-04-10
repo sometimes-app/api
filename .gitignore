@@ -410,3 +410,6 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+
+client/**
+openapitools.json

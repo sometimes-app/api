@@ -8,6 +8,7 @@ namespace Sometimes.Constants
 			public static readonly string ConnectionString = "MongoDbConnectionString";
 
 			public static readonly string DatabaseInfo = "SometimesDatabase";
+			public static readonly string DevHost = "DevHost";
 
         }
 	}
