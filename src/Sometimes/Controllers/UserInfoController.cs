@@ -1,6 +1,6 @@
-﻿using System;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Sometimes.Database.Models;
+using Sometimes.Models;
 using Sometimes.Services;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -10,16 +10,14 @@ namespace Sometimes.Controllers;
 [Route("[controller]")]
 public class UserInfoController : ControllerBase
 {
-    private readonly ILogger<UserInfoController> logger;
     private readonly IUserInfoService UserInfoService;
 
-    public UserInfoController(ILogger<UserInfoController> logger, IUserInfoService userInfoService)
+    public UserInfoController(IUserInfoService userInfoService)
     {
-        this.logger = logger;
         UserInfoService = userInfoService;
     }
 
-    [HttpGet(Name = "UserInfo")]
+    [HttpGet("")]
     [SwaggerOperation("GetUserInfo")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserInfo))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -45,15 +43,15 @@ public class UserInfoController : ControllerBase
         }
     }
 
-    [HttpPut(Name = "UserInfo")]
-    [SwaggerOperation("AddUserInfo")]
+    [HttpPost("")]
+    [SwaggerOperation("CreateUserInfo")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserInfo))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> AddUserInfo([FromBody] UserInfo userInfo)
+    public async Task<IActionResult> CreateUserInfo([FromBody] UserInfo userInfo)
     {
         try
         {
-            var user = await UserInfoService.PutUserInfo(userInfo);
+            var user = await UserInfoService.CreateUserInfo(userInfo);
 
             if (user is null)
             {
@@ -69,5 +67,66 @@ public class UserInfoController : ControllerBase
             return BadRequest(e.Message);
         }
     }
+
+    [HttpGet("Friends")]
+    [SwaggerOperation("GetFriends")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<FriendInfo>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetFriends([FromHeader] string uuid)
+    {
+        try
+        {
+            var friends = await UserInfoService.GetFriends(uuid);
+
+            return new OkObjectResult(friends);
+        }
+        catch (ArgumentException e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+    [HttpPost("AddFriend")]
+    [SwaggerOperation("AddFriend")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AddFriend([FromHeader] string uuid, [FromHeader] string friendUuid)
+    {
+        try
+        {
+            var success = await UserInfoService.AddFriend(uuid, friendUuid);
+
+            return success ? new OkResult() : StatusCode(500, "Unable to add friend");
+
+        }
+        catch (ArgumentException)
+        {
+            return BadRequest("One or both UUIDs were invalid");
+        }
+    }
+
+    [HttpPost("RemoveFriend")]
+    [SwaggerOperation("RemoveFriend")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveFriend([FromHeader] string uuid, [FromHeader] string friendUuid)
+    {
+        try
+        {
+            var success = await UserInfoService.RemoveFriend(uuid, friendUuid);
+
+            return success ? new OkResult() : StatusCode(500, "Unable to add friend");
+
+        }
+        catch (ArgumentException)
+        {
+            return BadRequest("One or both UUIDs were invalid");
+        }
+    }
+
+
 }
 
