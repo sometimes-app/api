@@ -16,8 +16,6 @@ namespace Sometimes.Services
         /// <inheritdoc/>
         public async Task<UserInfo?> GetUserInfo(string uuid)
         {
-            IsValidGuid(uuid);
-
             var user = await DatabaseService.GetUserInfoAsync(uuid);
 
             return user;
@@ -26,8 +24,6 @@ namespace Sometimes.Services
         /// <inheritdoc/>
         public async Task<UserInfo?> CreateUserInfo(UserInfo newUser)
         {
-            IsValidGuid(newUser.UUID);
-
             await DatabaseService.CreateUserInfoAsync(newUser);
             var user = await DatabaseService.GetUserInfoAsync(newUser.UUID);
             return user;
@@ -36,7 +32,6 @@ namespace Sometimes.Services
         /// <inheritdoc/>
         public async Task<IEnumerable<FriendInfo>> GetFriends(string uuid)
         {
-            IsValidGuid(uuid);
 
             var friendsUserInfo = await DatabaseService.GetFriends(uuid);
             if (friendsUserInfo == null)
@@ -57,42 +52,13 @@ namespace Sometimes.Services
         /// <inheritdoc/>
         public async Task<bool> AddFriend(string userUuid, string friendUuid)
         {
-            IsValidGuid(userUuid);
-            IsValidGuid(friendUuid);
-
             return await DatabaseService.AddFriend(userUuid, friendUuid);
-
         }
 
         /// <inheritdoc/>
         public async Task<bool> RemoveFriend(string userUuid, string friendUuid)
         {
-            IsValidGuid(userUuid);
-            IsValidGuid(friendUuid);
-
             return await DatabaseService.RemoveFriend(userUuid, friendUuid);
-        }
-
-        /// <summary>
-        /// Checks whether a string is a valid GUID
-        /// </summary>
-        /// <param name="guid">GUID to check vaildity of</param>
-        /// <returns><paramref name="guid"/> as a GUID</returns>
-        /// <exception cref="ArgumentException">Throws if the GUID is an invalid format</exception>
-        private Guid IsValidGuid(string guid)
-        {
-            Extensions.ValidatedNullable(guid);
-
-            var isGuid = Guid.TryParse(guid, out Guid validGuid);
-
-            if (isGuid)
-            {
-                return validGuid;
-            }
-            else
-            {
-                throw new ArgumentException($"Invalid UUID: {guid}");
-            }
         }
     }
 }
