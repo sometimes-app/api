@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using Sometimes.Database.Models;
 using Sometimes.Models;
 
@@ -9,7 +10,8 @@ namespace Sometimes.Database
     public class DatabaseService : IDatabaseService
     {
         private readonly IMongoCollection<UserInfo> UserInfoCollection;
-        private readonly IMongoCollection<UserMessage> UserMessagesCollection;
+        private readonly IMongoCollection<UserMessages> UserMessagesCollection;
+        private readonly IMongoCollection<PremadeMessage> PremadeMessagesCollection;
 
         public DatabaseService(IOptions<SometimesDbInfo> sometimesDbInfo)
         {
@@ -18,7 +20,8 @@ namespace Sometimes.Database
             var mongoDatabase = mongoClient.GetDatabase(sometimesDbInfo.Value.DatabaseName);
 
             UserInfoCollection = mongoDatabase.GetCollection<UserInfo>(sometimesDbInfo.Value.UserInfoCollectionName);
-            UserMessagesCollection = mongoDatabase.GetCollection<UserMessage>(sometimesDbInfo.Value.MessagesCollectionInfo);
+            UserMessagesCollection = mongoDatabase.GetCollection<UserMessages>(sometimesDbInfo.Value.MessagesCollectionInfo);
+            PremadeMessagesCollection = mongoDatabase.GetCollection<PremadeMessage>(sometimesDbInfo.Value.PremadeCollectionInfo);
         }
 
 
@@ -67,21 +70,58 @@ namespace Sometimes.Database
             return result.IsAcknowledged;
         }
 
+        public async Task<Message?> GetDailyMessage(string uuid)
+        {
+            UserMessages userMessages = await UserMessagesCollection.Find(x => x.UUID == uuid).FirstOrDefaultAsync();
+            // user not found
+            if (userMessages == null)
+                return null;
 
-        public async Task<List<UserMessage>> GetUserMessagesAsync() =>
-            await UserMessagesCollection.Find(_ => true).ToListAsync();
+            var unreadMessages = userMessages.Messages.Where(m => m.Read == false);
+            // there are unread messages
+            if (unreadMessages.Count() > 0)
+            {
+                var random = new Random();
+                var index = random.Next(0, unreadMessages.Count());
+                return unreadMessages.ElementAt(index);
+            }
 
-        public async Task<UserMessage?> GetUserMessagesAsync(string id) =>
-            await UserMessagesCollection.Find(x => x.userUUID == id).FirstOrDefaultAsync();
+            // the user has no unread messeges, get a premade message and add to users messages list and return message
+            PremadeMessage result = await PremadeMessagesCollection.AsQueryable().Sample(1).FirstOrDefaultAsync();
+            var newMessage = new Message { Body = result.Body, MessageID = result.MessageID, SentTime = DateTime.Now };
+            var filter = Builders<UserMessages>
+             .Filter.Eq(user => user.UUID, uuid);
 
-        public async Task CreateUserMessageAsync(UserMessage newMessage) =>
-            await UserMessagesCollection.InsertOneAsync(newMessage);
+            var update = Builders<UserMessages>.Update
+                    .Push(user => user.Messages, newMessage);
 
-        public async Task UpdateUserMessageAsync(string id, UserMessage userMessage) =>
-            await UserMessagesCollection.ReplaceOneAsync(x => x.userUUID == id, userMessage);
+            await UserMessagesCollection.FindOneAndUpdateAsync(filter, update);
+            return newMessage;
+        }
 
-        public async Task RemoveUserMessageAsync(string id) =>
-            await UserMessagesCollection.DeleteOneAsync(x => x.userUUID == id);
+        public async Task<bool> ReadMessage(string messageID)
+        {
+            var filter = Builders<UserMessages>.Filter.ElemMatch(u => u.Messages, m => m.MessageID == messageID);
+            var update = Builders<UserMessages>.Update.Set("Messages.$.Read", true);
+            var result = await UserMessagesCollection.FindOneAndUpdateAsync(filter, update);
+            if (result is not null) { return true; } else { return false; }
+        }
+
+
+        //public async Task<List<UserMessage>> GetUserMessagesAsync() =>
+        //    await UserMessagesCollection.Find(_ => true).ToListAsync();
+
+        //public async Task<UserMessage?> GetUserMessagesAsync(string id) =>
+        //    await UserMessagesCollection.Find(x => x.userUUID == id).FirstOrDefaultAsync();
+
+        //public async Task CreateUserMessageAsync(UserMessage newMessage) =>
+        //    await UserMessagesCollection.InsertOneAsync(newMessage);
+
+        //public async Task UpdateUserMessageAsync(string id, UserMessage userMessage) =>
+        //    await UserMessagesCollection.ReplaceOneAsync(x => x.userUUID == id, userMessage);
+
+        //public async Task RemoveUserMessageAsync(string id) =>
+        //    await UserMessagesCollection.DeleteOneAsync(x => x.userUUID == id);
     }
 }
 

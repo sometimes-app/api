@@ -33,7 +33,8 @@ internal class Program
         var app = builder.Build();
         // comment out and build to generate openapi file
         app.Urls.Clear();
-        app.Urls.Add("http://localhost:5228");
+        // app.Urls.Add("http://localhost:5228");
+        app.Urls.Add("http://10.0.0.57:5228");
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())

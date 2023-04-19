@@ -5,15 +5,15 @@ namespace Sometimes.Database
     public interface IDatabaseService
     {
         Task CreateUserInfoAsync(UserInfo newUser);
-        Task CreateUserMessageAsync(UserMessage newMessage);
+        //Task CreateUserMessageAsync(UserMessage newMessage);
         Task<List<UserInfo>> GetAllUserInfoAsync();
         Task<UserInfo?> GetUserInfoAsync(string id);
-        Task<List<UserMessage>> GetUserMessagesAsync();
-        Task<UserMessage?> GetUserMessagesAsync(string id);
+        //Task<List<UserMessage>> GetUserMessagesAsync();
+        //Task<UserMessage?> GetUserMessagesAsync(string id);
         Task RemoveUserInfoAsync(string id);
-        Task RemoveUserMessageAsync(string id);
+        //Task RemoveUserMessageAsync(string id);
         Task UpdateUserInfoAsync(string id, UserInfo userInfo);
-        Task UpdateUserMessageAsync(string id, UserMessage userMessage);
+        //Task UpdateUserMessageAsync(string id, UserMessage userMessage);
 
         /// <summary>
         /// Returns a list of user info based off a single user's uuid
@@ -37,6 +37,17 @@ namespace Sometimes.Database
         /// <param name="friendUuid">friend to add</param>
         /// <returns>True if acknowledged, false otherwise</returns>
         Task<bool> RemoveFriend(string userUuid, string friendUuid);
-
+        /// <summary>
+        /// Gets the daily message for a given uuid
+        /// </summary>
+        /// <param name="uuid">requester's uuid</param>
+        /// <returns><see cref="Message"/></returns>
+        Task<Message?> GetDailyMessage(string uuid);
+        /// <summary>
+        /// Sets read message flag to true for a given messageID
+        /// </summary>
+        /// <param name="messageID"></param>
+        /// <returns>true for success false for not found</returns>
+        Task<bool> ReadMessage(string messageID);
     }
 }

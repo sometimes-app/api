@@ -33,4 +33,9 @@
     <Folder Include="Database\Models\" />
     <Folder Include="Services\" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="dotnet tool restore" />
+    <Exec Command="dotnet swagger tofile --output swagger.json $(OutputPath)\$(AssemblyName).dll v1 " />
+</Target>
 </Project>
