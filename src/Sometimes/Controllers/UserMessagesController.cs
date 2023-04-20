@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Sometimes.Database.Models;
 using Sometimes.Models;
-using Sometimes.Services;
 using Swashbuckle.AspNetCore.Annotations;
+using Sometimes.Services.Interfaces;
 
 namespace Sometimes.Controllers;
 
@@ -16,7 +16,7 @@ public class UserMessagesController : Controller
     {
         UserMessagesService = userMessagesService;
     }
-    [HttpGet("")]
+    [HttpGet("/dailyMessage")]
     [SwaggerOperation("GetDailyMessage")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DisplayMessage))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

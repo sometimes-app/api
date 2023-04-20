@@ -1,6 +1,7 @@
 ﻿using Sometimes.Database;
 using Sometimes.Database.Models;
 using Sometimes.Models;
+using Sometimes.Services.Interfaces;
 
 namespace Sometimes.Services
 {
@@ -13,11 +14,15 @@ namespace Sometimes.Services
             DatabaseService = databaseService;
         }
 
+        /// <inheritdoc/>
         public async Task<DisplayMessage?> GetDailyMessage(string uuid)
         {
             var message = await DatabaseService.GetDailyMessage(uuid);
             if (message == null)
+            {
                 return null;
+            }
+
             var result = new DisplayMessage
             {
                 MessageID = message.MessageID,
@@ -31,6 +36,8 @@ namespace Sometimes.Services
             }
             return result;
         }
+
+        /// <inheritdoc/>
         public async Task<bool> ReadMessage(string messageID) => await DatabaseService.ReadMessage(messageID);
     }
 }

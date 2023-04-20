@@ -9,6 +9,7 @@ using Sometimes.Models;
 using Sometimes.Services;
 using System;
 using System.Configuration;
+using Sometimes.Services.Interfaces;
 
 internal class Program
 {
@@ -32,10 +33,10 @@ internal class Program
 
         var app = builder.Build();
         // comment out and build to generate openapi file
-        app.Urls.Clear();
-        // app.Urls.Add("http://localhost:5228");
-        app.Urls.Add("http://10.0.0.57:5228");
-
+#if !DEBUG
+        app.Urls.Add("http://host.docker.internal:5228");
+#endif
+#if DEBUG
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
@@ -44,6 +45,7 @@ internal class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
+#endif
 
         app.UseAuthorization();
 

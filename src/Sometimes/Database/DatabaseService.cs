@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using Sometimes.Database.Models;
@@ -104,24 +105,59 @@ namespace Sometimes.Database
             var filter = Builders<UserMessages>.Filter.ElemMatch(u => u.Messages, m => m.MessageID == messageID);
             var update = Builders<UserMessages>.Update.Set("Messages.$.Read", true);
             var result = await UserMessagesCollection.FindOneAndUpdateAsync(filter, update);
-            if (result is not null) { return true; } else { return false; }
+            return result is not null ? true : false;
         }
 
+    //    private void Temp()
+    //    {
+    //        var pResults = PremadeMessagesCollection.Aggregate()
+    //.Match(new BsonDocument { { "username", "nraboy" } })
+    //.Project(new BsonDocument{
+    //        { "_id", 1 },
+    //        { "username", 1 },
+    //        {
+    //            "items", new BsonDocument{
+    //                {
+    //                    "$map", new BsonDocument{
+    //                        { "input", "$items" },
+    //                        { "as", "item" },
+    //                        {
+    //                            "in", new BsonDocument{
+    //                                {
+    //                                    "$convert", new BsonDocument{
+    //                                        { "input", "$$item" },
+    //                                        { "to", "objectId" }
+    //                                    }
+    //                                }
+    //                            }
+    //                        }
+    //                    }
+    //                }
+    //            }
+    //        }
+    //    })
+    //.Lookup("movies", "items", "_id", "movies")
+    //.Unwind("movies")
+    //.Group(new BsonDocument{
+    //        { "_id", "$_id" },
+    //        {
+    //            "username", new BsonDocument{
+    //                { "$first", "$username" }
+    //            }
+    //        },
+    //        {
+    //            "movies", new BsonDocument{
+    //                { "$addToSet", "$movies" }
+    //            }
+    //        }
+    //    })
+    //.ToList();
 
-        //public async Task<List<UserMessage>> GetUserMessagesAsync() =>
-        //    await UserMessagesCollection.Find(_ => true).ToListAsync();
-
-        //public async Task<UserMessage?> GetUserMessagesAsync(string id) =>
-        //    await UserMessagesCollection.Find(x => x.userUUID == id).FirstOrDefaultAsync();
-
-        //public async Task CreateUserMessageAsync(UserMessage newMessage) =>
-        //    await UserMessagesCollection.InsertOneAsync(newMessage);
-
-        //public async Task UpdateUserMessageAsync(string id, UserMessage userMessage) =>
-        //    await UserMessagesCollection.ReplaceOneAsync(x => x.userUUID == id, userMessage);
-
-        //public async Task RemoveUserMessageAsync(string id) =>
-        //    await UserMessagesCollection.DeleteOneAsync(x => x.userUUID == id);
+    //        foreach (var pResult in pResults)
+    //        {
+    //            Console.WriteLine(pResult);
+    //        }
+    //    }
     }
 }
 
