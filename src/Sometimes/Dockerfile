@@ -3,8 +3,8 @@ WORKDIR /app
 COPY . .
 
 RUN dotnet restore
-RUN dotnet build -c Release -o /app/build
+RUN dotnet publish -c Release -o /app/build
 
-EXPOSE 5228
+EXPOSE 5000
 
-ENTRYPOINT ["dotnet", "run"]
+ENTRYPOINT ["dotnet", "/app/build/Sometimes.dll"]

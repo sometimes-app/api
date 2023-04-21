@@ -10,6 +10,7 @@ using Sometimes.Services;
 using System;
 using System.Configuration;
 using Sometimes.Services.Interfaces;
+using Serilog;
 
 internal class Program
 {
@@ -32,20 +33,21 @@ internal class Program
         SetupServices(builder);
 
         var app = builder.Build();
+
         // comment out and build to generate openapi file
-#if !DEBUG
-        app.Urls.Add("http://host.docker.internal:5228");
-#endif
+
 #if DEBUG
+        Log.Logger.Information("DEBUG");
+#else
+        Log.Logger.Information("PROD");
+#endif
+
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
-            var devHostUrl = builder.Configuration.GetValue<string>(Constants.AppSettings.DevHost);
-            app.Urls.Add(devHostUrl);
             app.UseSwagger();
             app.UseSwaggerUI();
         }
-#endif
 
         app.UseAuthorization();
 
