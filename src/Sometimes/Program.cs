@@ -33,14 +33,10 @@ internal class Program
         SetupServices(builder);
 
         var app = builder.Build();
-
+        #if !DEBUG
+        app.Urls.Add("http://0.0.0.0:5000");
+        #endif
         // comment out and build to generate openapi file
-
-#if DEBUG
-        Log.Logger.Information("DEBUG");
-#else
-        Log.Logger.Information("PROD");
-#endif
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
