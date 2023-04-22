@@ -16,7 +16,8 @@ public class UserMessagesController : Controller
     {
         UserMessagesService = userMessagesService;
     }
-    [HttpGet("/dailyMessage")]
+
+    [HttpGet("/messages/daily")]
     [SwaggerOperation("GetDailyMessage")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DisplayMessage))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -34,6 +35,33 @@ public class UserMessagesController : Controller
             else
             {
                 return new OkObjectResult(displayMessage);
+            }
+        }
+        catch (ArgumentException e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+
+    [HttpPut("/messages")]
+    [SwaggerOperation("ReadMessage")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ReadMessage([FromHeader] string uuid, [FromHeader] string messageId)
+    {
+        try
+        {
+            var displayMessage = await UserMessagesService.ReadMessage(uuid, messageId);
+
+            if (displayMessage)
+            {
+                return NotFound();
+            }
+            else
+            {
+                return Ok();
             }
         }
         catch (ArgumentException e)

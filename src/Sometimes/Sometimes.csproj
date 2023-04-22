@@ -35,9 +35,10 @@
     <Folder Include="Database\Models\" />
     <Folder Include="Services\" />
     <Folder Include="Services\Interfaces\" />
+    <Folder Include="wwwroot\" />
   </ItemGroup>
 
       <Target Name="OpenAPI" AfterTargets="Build" Condition="$(Configuration)=='Debug'">
-        <Exec Command="dotnet swagger tofile --output ../../Design/design.yaml --yaml $(OutputPath)$(AssemblyName).dll v1" WorkingDirectory="$(ProjectDir)" />
+        <Exec Command="dotnet swagger tofile --output ./wwwroot/design.yaml --yaml $(OutputPath)$(AssemblyName).dll v1" WorkingDirectory="$(ProjectDir)" />
     </Target>
 </Project>

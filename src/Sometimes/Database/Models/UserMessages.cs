@@ -1,22 +1,24 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Sometimes.Database.Models
 {
     public class UserMessages
     {
         [BsonId]
-        public string UUID { get; set; } = null!;
-        public List<Message> Messages { get; set; } = null!;
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string _id { get; set; } = null!;
+        public string uuid { get; set; } = null!;
+        public List<Message> messages { get; set; } = null!;
     }
 
     public class Message
     {
-        [BsonId]
-        public string MessageID { get; set; } = null!;
-        public DateTime? SentTime { get; set; }
-        public string Body { get; set; } = null!;
-        public string? SenderUUID { get; set; }
-        public DateTime? ReadTime { get; set; }
-        public bool Read { get; set; } = false;
+        public string messageId { get; set; } = null!;
+        public DateTime? sentTime { get; set; }
+        public string body { get; set; } = null!;
+        public string? senderUuid { get; set; }
+        public DateTime? readTime { get; set; }
+        public bool read { get; set; } = false;
     }
 }

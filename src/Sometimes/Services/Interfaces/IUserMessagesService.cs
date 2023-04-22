@@ -15,8 +15,9 @@ namespace Sometimes.Services.Interfaces
         /// <summary>
         /// Sets read message flag to true for a given messageID
         /// </summary>
+        /// <param name="uuid"></param>
         /// <param name="messageID"></param>
         /// <returns>true for success false for not found</returns>
-        Task<bool> ReadMessage(string messageID);
+        Task<bool> ReadMessage(string uuid, string messageID);
     }
 }

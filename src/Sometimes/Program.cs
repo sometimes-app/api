@@ -33,10 +33,10 @@ internal class Program
         SetupServices(builder);
 
         var app = builder.Build();
+
         #if !DEBUG
         app.Urls.Add("http://0.0.0.0:5000");
         #endif
-        // comment out and build to generate openapi file
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -69,7 +69,8 @@ internal class Program
     /// </summary>
     private static void SetupServices(WebApplicationBuilder builder)
     {
-        builder.Services.AddTransient<IUserInfoService, UserInfoService>();
+        builder.Services.AddScoped<IUserInfoService, UserInfoService>();
+        builder.Services.AddScoped<IUserMessagesService, UserMessagesService>();
     }
 }
 

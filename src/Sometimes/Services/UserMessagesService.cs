@@ -25,12 +25,12 @@ namespace Sometimes.Services
 
             var result = new DisplayMessage
             {
-                MessageID = message.MessageID,
-                MessageBody = message.Body,
+                MessageID = message.messageId,
+                MessageBody = message.body,
             };
-            if (!string.IsNullOrEmpty(message.SenderUUID))
+            if (!string.IsNullOrEmpty(message.senderUuid))
             {
-                var senderInfo = await DatabaseService.GetUserInfoAsync(message.SenderUUID);
+                var senderInfo = await DatabaseService.GetUserInfoAsync(message.senderUuid);
                 if (senderInfo != null)
                     result.SenderName = senderInfo.FirstName + " " + senderInfo.LastName;
             }
@@ -38,6 +38,6 @@ namespace Sometimes.Services
         }
 
         /// <inheritdoc/>
-        public async Task<bool> ReadMessage(string messageID) => await DatabaseService.ReadMessage(messageID);
+        public async Task<bool> ReadMessage(string uuid, string messageID) => await DatabaseService.ReadMessage(uuid, messageID);
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
+using Serilog;
 using Sometimes.Database.Models;
 using Sometimes.Models;
 
@@ -73,12 +74,12 @@ namespace Sometimes.Database
 
         public async Task<Message?> GetDailyMessage(string uuid)
         {
-            UserMessages userMessages = await UserMessagesCollection.Find(x => x.UUID == uuid).FirstOrDefaultAsync();
+            UserMessages userMessages = await UserMessagesCollection.Find(x => x.uuid == uuid).FirstOrDefaultAsync();
             // user not found
             if (userMessages == null)
                 return null;
 
-            var unreadMessages = userMessages.Messages.Where(m => m.Read == false);
+            var unreadMessages = userMessages.messages.Where(m => m.read == false);
             // there are unread messages
             if (unreadMessages.Count() > 0)
             {
@@ -89,75 +90,30 @@ namespace Sometimes.Database
 
             // the user has no unread messeges, get a premade message and add to users messages list and return message
             PremadeMessage result = await PremadeMessagesCollection.AsQueryable().Sample(1).FirstOrDefaultAsync();
-            var newMessage = new Message { Body = result.Body, MessageID = result.MessageID, SentTime = DateTime.Now };
+            var newMessage = new Message { body = result.Body, messageId = result.MessageID, sentTime = DateTime.Now };
             var filter = Builders<UserMessages>
-             .Filter.Eq(user => user.UUID, uuid);
+             .Filter.Eq(user => user.uuid, uuid);
 
             var update = Builders<UserMessages>.Update
-                    .Push(user => user.Messages, newMessage);
+                    .Push(user => user.messages, newMessage);
 
             await UserMessagesCollection.FindOneAndUpdateAsync(filter, update);
             return newMessage;
         }
 
-        public async Task<bool> ReadMessage(string messageID)
+        /// <inheritdoc/>
+        public async Task<bool> ReadMessage(string uuid, string messageID)
         {
-            var filter = Builders<UserMessages>.Filter.ElemMatch(u => u.Messages, m => m.MessageID == messageID);
-            var update = Builders<UserMessages>.Update.Set("Messages.$.Read", true);
-            var result = await UserMessagesCollection.FindOneAndUpdateAsync(filter, update);
-            return result is not null ? true : false;
+            var findMessageFilter = Builders<UserMessages>.Filter.And(
+                Builders<UserMessages>.Filter.Eq("uuid", uuid),
+                Builders<UserMessages>.Filter.Eq("messages.messageId", messageID)
+            );
+
+            var updateRead = Builders<UserMessages>.Update.Set("messages.$.read", true);
+            var value = await UserMessagesCollection.UpdateOneAsync(findMessageFilter, updateRead);
+
+            return value is not null ? true : false;
         }
-
-    //    private void Temp()
-    //    {
-    //        var pResults = PremadeMessagesCollection.Aggregate()
-    //.Match(new BsonDocument { { "username", "nraboy" } })
-    //.Project(new BsonDocument{
-    //        { "_id", 1 },
-    //        { "username", 1 },
-    //        {
-    //            "items", new BsonDocument{
-    //                {
-    //                    "$map", new BsonDocument{
-    //                        { "input", "$items" },
-    //                        { "as", "item" },
-    //                        {
-    //                            "in", new BsonDocument{
-    //                                {
-    //                                    "$convert", new BsonDocument{
-    //                                        { "input", "$$item" },
-    //                                        { "to", "objectId" }
-    //                                    }
-    //                                }
-    //                            }
-    //                        }
-    //                    }
-    //                }
-    //            }
-    //        }
-    //    })
-    //.Lookup("movies", "items", "_id", "movies")
-    //.Unwind("movies")
-    //.Group(new BsonDocument{
-    //        { "_id", "$_id" },
-    //        {
-    //            "username", new BsonDocument{
-    //                { "$first", "$username" }
-    //            }
-    //        },
-    //        {
-    //            "movies", new BsonDocument{
-    //                { "$addToSet", "$movies" }
-    //            }
-    //        }
-    //    })
-    //.ToList();
-
-    //        foreach (var pResult in pResults)
-    //        {
-    //            Console.WriteLine(pResult);
-    //        }
-    //    }
     }
 }
 
