@@ -25,14 +25,14 @@ namespace Sometimes.Services
 
             var result = new DisplayMessage
             {
-                MessageID = message.messageId,
-                MessageBody = message.body,
+                messageId = message.messageId,
+                messageBody = message.messageBody,
             };
             if (!string.IsNullOrEmpty(message.senderUuid))
             {
                 var senderInfo = await DatabaseService.GetUserInfoAsync(message.senderUuid);
                 if (senderInfo != null)
-                    result.SenderName = senderInfo.FirstName + " " + senderInfo.LastName;
+                    result.senderName = senderInfo.FirstName + " " + senderInfo.LastName;
             }
             return result;
         }

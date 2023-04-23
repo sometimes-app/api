@@ -1,4 +1,5 @@
 ﻿using Sometimes.Database.Models;
+using Sometimes.Models;
 
 namespace Sometimes.Database
 {
@@ -38,8 +39,8 @@ namespace Sometimes.Database
         /// Gets the daily message for a given uuid
         /// </summary>
         /// <param name="uuid">requester's uuid</param>
-        /// <returns><see cref="Message"/></returns>
-        Task<Message?> GetDailyMessage(string uuid);
+        /// <returns><see cref="UserMessage"/></returns>
+        Task<DisplayMessage?> GetDailyMessage(string uuid);
 
         /// <summary>
         /// Sets read message flag to true for a given messageID

@@ -9,7 +9,7 @@ namespace Sometimes.Services.Interfaces
         /// Gets the users daily message with given uuid
         /// </summary>
         /// <param name="uuid">User's uuid</param>
-        /// <returns><see cref="Message"/></returns>
+        /// <returns><see cref="DisplayMessage"/></returns>
         Task<DisplayMessage?> GetDailyMessage(string uuid);
 
         /// <summary>

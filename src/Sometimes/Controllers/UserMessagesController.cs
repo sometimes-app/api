@@ -57,11 +57,11 @@ public class UserMessagesController : Controller
 
             if (displayMessage)
             {
-                return NotFound();
+                return Ok();
             }
             else
             {
-                return Ok();
+                return NotFound();
             }
         }
         catch (ArgumentException e)

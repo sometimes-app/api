@@ -9,11 +9,12 @@ namespace Sometimes.Database.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string _id { get; set; } = null!;
         public string uuid { get; set; } = null!;
-        public List<Message> messages { get; set; } = null!;
+        public List<UserMessage> messages { get; set; } = new List<UserMessage>();
     }
 
-    public class Message
+    public class UserMessage
     {
+        public string _id { get; set; } = null!;
         public string messageId { get; set; } = null!;
         public DateTime? sentTime { get; set; }
         public string body { get; set; } = null!;

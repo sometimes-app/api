@@ -311,13 +311,22 @@ components:
     DisplayMessage:
       type: object
       properties:
-        messageID:
+        uuid:
           type: string
           nullable: true
+        messageId:
+          type: string
+          nullable: true
+        sentTime:
+          type: string
+          format: date-time
         messageBody:
           type: string
           nullable: true
         senderName:
+          type: string
+          nullable: true
+        senderUuid:
           type: string
           nullable: true
       additionalProperties: false

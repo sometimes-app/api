@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using Serilog;
@@ -12,8 +14,11 @@ namespace Sometimes.Database
     public class DatabaseService : IDatabaseService
     {
         private readonly IMongoCollection<UserInfo> UserInfoCollection;
+        private readonly string UserInfoCollectionName;
         private readonly IMongoCollection<UserMessages> UserMessagesCollection;
+        private readonly string UserMessagesCollectionName;
         private readonly IMongoCollection<PremadeMessage> PremadeMessagesCollection;
+        private readonly string PremadeMessagesCollectionName;
 
         public DatabaseService(IOptions<SometimesDbInfo> sometimesDbInfo)
         {
@@ -21,9 +26,13 @@ namespace Sometimes.Database
 
             var mongoDatabase = mongoClient.GetDatabase(sometimesDbInfo.Value.DatabaseName);
 
-            UserInfoCollection = mongoDatabase.GetCollection<UserInfo>(sometimesDbInfo.Value.UserInfoCollectionName);
-            UserMessagesCollection = mongoDatabase.GetCollection<UserMessages>(sometimesDbInfo.Value.MessagesCollectionInfo);
-            PremadeMessagesCollection = mongoDatabase.GetCollection<PremadeMessage>(sometimesDbInfo.Value.PremadeCollectionInfo);
+            UserInfoCollectionName = sometimesDbInfo.Value.UserInfoCollectionName.ValidatedNullable()!;
+            UserMessagesCollectionName = sometimesDbInfo.Value.MessagesCollectionInfo.ValidatedNullable()!;
+            PremadeMessagesCollectionName = sometimesDbInfo.Value.PremadeCollectionInfo.ValidatedNullable()!;
+
+            UserInfoCollection = mongoDatabase.GetCollection<UserInfo>(UserInfoCollectionName);
+            UserMessagesCollection = mongoDatabase.GetCollection<UserMessages>(UserMessagesCollectionName);
+            PremadeMessagesCollection = mongoDatabase.GetCollection<PremadeMessage>(PremadeMessagesCollectionName);
         }
 
 
@@ -72,33 +81,102 @@ namespace Sometimes.Database
             return result.IsAcknowledged;
         }
 
-        public async Task<Message?> GetDailyMessage(string uuid)
+        public async Task<DisplayMessage?> GetDailyMessage(string uuid)
         {
-            UserMessages userMessages = await UserMessagesCollection.Find(x => x.uuid == uuid).FirstOrDefaultAsync();
-            // user not found
-            if (userMessages == null)
-                return null;
+            //var unreadMessages = await UserMessagesCollection.AsQueryable()
+            //    .SelectMany(f => f.messages)
+            //    .Where(m => !m.read)
+            //    .ToListAsync();
 
-            var unreadMessages = userMessages.messages.Where(m => m.read == false);
-            // there are unread messages
-            if (unreadMessages.Count() > 0)
+
+
+            var unreadMessages2 = await UserMessagesCollection.Aggregate()
+                .Match(user => user.uuid == uuid)
+                .Unwind(u => u.messages)
+                .Match(m => !m["messages"]["read"].AsBoolean)
+                .Lookup<UserInfo, BsonDocument>(
+                    UserInfoCollectionName,
+                    "messages.$.senderUuid",
+                    "uuid",
+                    "senderInfo"
+                )
+                .ToListAsync();
+
+            //var unreadMessages = await UserMessagesCollection.Aggregate()
+            //    .Match(user => user.uuid == uuid)
+            //    .Unwind(u => u.messages)
+            //    .Match(m => !m["messages"]["read"].AsBoolean)
+            //    .Lookup(
+            //        UserInfoCollectionName,
+            //        u => u["uuid"],
+            //        m => m["uuid"],
+            //        (messages, users) => new BsonDocument
+            //        {
+            //            { "uuid": users["uuid"] }
+            //        }
+
+
+            //    )
+            //    .Project(p => new
+            //    {
+            //        UserId = p["UserId"],
+            //        Username = p["Username"],
+            //        Messages = p["Messages"]
+            //            .AsBsonArray
+            //            .Select(x => new BsonDocument("read", x["read"])
+            //                .Add("text", x["text"])
+            //                .Add("timestamp", x["timestamp"])
+            //            )
+            //            .ToList()
+            //    })
+            //    .ToListAsync();
+
+            if (unreadMessages2.Count > 0)
             {
-                var random = new Random();
-                var index = random.Next(0, unreadMessages.Count());
-                return unreadMessages.ElementAt(index);
+                var message = unreadMessages2.ElementAt(new Random().Next(0, unreadMessages2.Count));
+                return new DisplayMessage();
+                //{
+                //    uuid = message
+                //    messageId
+                //    sentTime
+                //    messageBody
+                //    senderName
+                //    senderUuid
+                //}
+
+            }
+            else
+            {
+                return null;
             }
 
-            // the user has no unread messeges, get a premade message and add to users messages list and return message
-            PremadeMessage result = await PremadeMessagesCollection.AsQueryable().Sample(1).FirstOrDefaultAsync();
-            var newMessage = new Message { body = result.Body, messageId = result.MessageID, sentTime = DateTime.Now };
-            var filter = Builders<UserMessages>
-             .Filter.Eq(user => user.uuid, uuid);
+            #region temp
+            //UserMessages userMessages = await UserMessagesCollection.Find(x => x.uuid == uuid).FirstOrDefaultAsync();
+            //// user not found
+            //if (userMessages == null)
+            //    return null;
 
-            var update = Builders<UserMessages>.Update
-                    .Push(user => user.messages, newMessage);
+            //var unreadMessages = userMessages.messages.Where(m => m.read == false);
+            //// there are unread messages
+            //if (unreadMessages.Count() > 0)
+            //{
+            //    var random = new Random();
+            //    var index = random.Next(0, unreadMessages.Count());
+            //    return unreadMessages.ElementAt(index);
+            //}
 
-            await UserMessagesCollection.FindOneAndUpdateAsync(filter, update);
-            return newMessage;
+            //// the user has no unread messeges, get a premade message and add to users messages list and return message
+            //PremadeMessage result = await PremadeMessagesCollection.AsQueryable().Sample(1).FirstOrDefaultAsync();
+            //var newMessage = new DisplayMessage { body = result.Body, messageId = result.MessageID, sentTime = DateTime.Now };
+            //var filter = Builders<UserMessages>
+            // .Filter.Eq(user => user.uuid, uuid);
+
+            //var update = Builders<UserMessages>.Update
+            //        .Push(user => user.messages, newMessage);
+
+            //await UserMessagesCollection.FindOneAndUpdateAsync(filter, update);
+            //return newMessage;
+            #endregion
         }
 
         /// <inheritdoc/>
@@ -109,7 +187,8 @@ namespace Sometimes.Database
                 Builders<UserMessages>.Filter.Eq("messages.messageId", messageID)
             );
 
-            var updateRead = Builders<UserMessages>.Update.Set("messages.$.read", true);
+            var updateRead = Builders<UserMessages>.Update.Set("messages.$.read", true)
+                .Set("messages.$.readTime", DateTime.UtcNow);
             var value = await UserMessagesCollection.UpdateOneAsync(findMessageFilter, updateRead);
 
             return value is not null ? true : false;
