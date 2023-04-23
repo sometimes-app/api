@@ -16,7 +16,7 @@ public class UserMessagesController : Controller
     {
         UserMessagesService = userMessagesService;
     }
-    [HttpGet("/dailyMessage")]
+    [HttpGet("/message/daily")]
     [SwaggerOperation("GetDailyMessage")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DisplayMessage))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -34,6 +34,56 @@ public class UserMessagesController : Controller
             else
             {
                 return new OkObjectResult(displayMessage);
+            }
+        }
+        catch (ArgumentException e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+    [HttpPut("/message/read")]
+    [SwaggerOperation("ReadDailyMessage")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ReadDailyMessage([FromHeader] string messageID)
+    {
+        try
+        {
+            var result = await UserMessagesService.ReadMessage(messageID);
+
+            if (!result)
+            {
+                return NotFound();
+            }
+            else
+            {
+                return new OkResult();
+            }
+        }
+        catch (ArgumentException e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+    [HttpPut("/message/archive")]
+    [SwaggerOperation("GetMessageArchive")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<DisplayMessage>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMessageArchive([FromHeader] string uuid)
+    {
+        try
+        {
+            var result = await UserMessagesService.GetMessageArchive(uuid);
+
+            if (result is null)
+            {
+                return NotFound();
+            }
+            else
+            {
+                return new OkObjectResult(result);
             }
         }
         catch (ArgumentException e)

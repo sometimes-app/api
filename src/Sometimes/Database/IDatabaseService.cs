@@ -1,4 +1,5 @@
 ﻿using Sometimes.Database.Models;
+using Sometimes.Models;
 
 namespace Sometimes.Database
 {
@@ -49,5 +50,11 @@ namespace Sometimes.Database
         /// <param name="messageID"></param>
         /// <returns>true for success false for not found</returns>
         Task<bool> ReadMessage(string messageID);
+        /// <summary>
+        /// Gets all read messages for a user with given uuid
+        /// </summary>
+        /// <param name="uuid"></param>
+        /// <returns>return <see cref="List{DisplayMessage}"/> if found, else returns null</returns>
+        Task<List<DisplayMessage>?> GetReadMessages(string uuid);
     }
 }

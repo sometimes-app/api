@@ -75,6 +75,7 @@ namespace Sometimes.Database
         {
             UserMessages userMessages = await UserMessagesCollection.Find(x => x.UUID == uuid).FirstOrDefaultAsync();
             // user not found
+            Console.WriteLine(uuid, userMessages);
             if (userMessages == null)
                 return null;
 
@@ -106,6 +107,14 @@ namespace Sometimes.Database
             var update = Builders<UserMessages>.Update.Set("Messages.$.Read", true);
             var result = await UserMessagesCollection.FindOneAndUpdateAsync(filter, update);
             return result is not null ? true : false;
+        }
+
+        public async Task<List<DisplayMessage>?> GetReadMessages(string uuid)
+        {
+            var query = from user in UserMessagesCollection.AsQueryable()
+                        from message in user.Messages
+                        join otherUser in UserInfoCollection on message.SenderUUID equals otherUser.UUID into joined
+                        select new DisplayMessage { MessageBody = message.Body, MessageID = message.MessageID, SenderName = joined.First().FirstName + " " + joined.First().LastName };
         }
 
     //    private void Temp()

@@ -39,5 +39,11 @@ namespace Sometimes.Services
 
         /// <inheritdoc/>
         public async Task<bool> ReadMessage(string messageID) => await DatabaseService.ReadMessage(messageID);
+        public async Task<List<DisplayMessage>?> GetMessageArchive(string uuid)
+        {
+            var result = await DatabaseService.GetReadMessages(uuid);
+            if (result is null) return null;
+            return result.Messages.Select(m => new DisplayMessage { MessageBody = m.Body, MessageID = m.MessageID }).ToList();
+        }
     }
 }

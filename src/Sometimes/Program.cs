@@ -46,7 +46,7 @@ internal class Program
             app.UseSwaggerUI();
         }
 #endif
-
+        app.Urls.Add("http://10.0.0.57:5228");
         app.UseAuthorization();
 
         app.MapControllers();
@@ -72,6 +72,7 @@ internal class Program
     private static void SetupServices(WebApplicationBuilder builder)
     {
         builder.Services.AddTransient<IUserInfoService, UserInfoService>();
+        builder.Services.AddTransient<IUserMessagesService, UserMessagesService>();
     }
 }
 

@@ -9,7 +9,7 @@ namespace Sometimes.Services.Interfaces
         /// Gets the users daily message with given uuid
         /// </summary>
         /// <param name="uuid">User's uuid</param>
-        /// <returns><see cref="Message"/></returns>
+        /// <returns><see cref="DisplayMessage"/></returns>
         Task<DisplayMessage?> GetDailyMessage(string uuid);
 
         /// <summary>
@@ -18,5 +18,11 @@ namespace Sometimes.Services.Interfaces
         /// <param name="messageID"></param>
         /// <returns>true for success false for not found</returns>
         Task<bool> ReadMessage(string messageID);
+        /// <summary>
+        /// Gets the users read messages with given uuid
+        /// </summary>
+        /// <param name="uuid"></param>
+        /// <returns><see cref="List{DisplayMessage}"/></returns>
+        Task<List<DisplayMessage>?> GetMessageArchive(string uuid);
     }
 }

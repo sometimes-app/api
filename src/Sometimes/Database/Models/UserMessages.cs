@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Sometimes.Database.Models
 {
@@ -11,7 +12,7 @@ namespace Sometimes.Database.Models
 
     public class Message
     {
-        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
         public string MessageID { get; set; } = null!;
         public DateTime? SentTime { get; set; }
         public string Body { get; set; } = null!;
