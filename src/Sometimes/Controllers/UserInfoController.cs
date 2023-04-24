@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Sometimes.Database.Models;
 using Sometimes.Models;
-using Sometimes.Services;
 using Swashbuckle.AspNetCore.Annotations;
+using Sometimes.Services.Interfaces;
 
 namespace Sometimes.Controllers;
 

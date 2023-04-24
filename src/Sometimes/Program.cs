@@ -9,6 +9,8 @@ using Sometimes.Models;
 using Sometimes.Services;
 using System;
 using System.Configuration;
+using Sometimes.Services.Interfaces;
+using Serilog;
 
 internal class Program
 {
@@ -31,15 +33,14 @@ internal class Program
         SetupServices(builder);
 
         var app = builder.Build();
-        // comment out and build to generate openapi file
-        app.Urls.Clear();
-        app.Urls.Add("http://localhost:5228");
+
+        #if !DEBUG
+        app.Urls.Add("http://0.0.0.0:5000");
+        #endif
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
-            var devHostUrl = builder.Configuration.GetValue<string>(Constants.AppSettings.DevHost);
-            app.Urls.Add(devHostUrl);
             app.UseSwagger();
             app.UseSwaggerUI();
         }
@@ -68,7 +69,8 @@ internal class Program
     /// </summary>
     private static void SetupServices(WebApplicationBuilder builder)
     {
-        builder.Services.AddTransient<IUserInfoService, UserInfoService>();
+        builder.Services.AddScoped<IUserInfoService, UserInfoService>();
+        builder.Services.AddScoped<IUserMessagesService, UserMessagesService>();
     }
 }
 

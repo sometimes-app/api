@@ -15,6 +15,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
     <PackageReference Include="Swashbuckle.AspNetcore.Swagger" Version="6.5.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
+    <PackageReference Include="Serilog" Version="2.12.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +26,7 @@
     <None Remove="Database\" />
     <None Remove="Database\Models\" />
     <None Remove="Services\" />
+    <None Remove="Services\Interfaces\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Constants\" />
@@ -32,5 +34,11 @@
     <Folder Include="Database\" />
     <Folder Include="Database\Models\" />
     <Folder Include="Services\" />
+    <Folder Include="Services\Interfaces\" />
+    <Folder Include="wwwroot\" />
   </ItemGroup>
+
+      <Target Name="OpenAPI" AfterTargets="Build" Condition="$(Configuration)=='Debug'">
+        <Exec Command="dotnet swagger tofile --output ./wwwroot/design.yaml --yaml $(OutputPath)$(AssemblyName).dll v1" WorkingDirectory="$(ProjectDir)" />
+    </Target>
 </Project>

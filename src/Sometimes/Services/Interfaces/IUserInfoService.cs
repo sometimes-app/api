@@ -1,7 +1,7 @@
 ﻿using Sometimes.Database.Models;
 using Sometimes.Models;
 
-namespace Sometimes.Services
+namespace Sometimes.Services.Interfaces
 {
     public interface IUserInfoService
     {

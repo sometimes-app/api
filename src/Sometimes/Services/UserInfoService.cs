@@ -1,6 +1,7 @@
 ﻿using Sometimes.Database;
 using Sometimes.Database.Models;
 using Sometimes.Models;
+using Sometimes.Services.Interfaces;
 
 namespace Sometimes.Services
 {
@@ -25,7 +26,7 @@ namespace Sometimes.Services
         public async Task<UserInfo?> CreateUserInfo(UserInfo newUser)
         {
             await DatabaseService.CreateUserInfoAsync(newUser);
-            var user = await DatabaseService.GetUserInfoAsync(newUser.UUID);
+            var user = await DatabaseService.GetUserInfoAsync(newUser.uuid);
             return user;
         }
 
@@ -41,7 +42,7 @@ namespace Sometimes.Services
 
             return friendsUserInfo.Select(friend => new FriendInfo
             {
-                UUID = friend.UUID,
+                UUID = friend.uuid,
                 FirstName = friend.FirstName,
                 LastName = friend.LastName,
                 UserName = friend.UserName,

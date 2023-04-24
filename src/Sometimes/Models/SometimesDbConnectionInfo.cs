@@ -7,6 +7,7 @@ namespace Sometimes.Models
 
         public string? UserInfoCollectionName { get; set; }
         public string? MessagesCollectionInfo { get; set; }
+        public string? PremadeCollectionInfo { get; set; }
     }
 }
 
