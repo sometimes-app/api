@@ -7,7 +7,10 @@ namespace Sometimes.Database.Models
 	public class UserInfo
 	{
         [BsonId]
-        public string UUID { get; set; } = null!;
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string _id { get; set; } = null!;
+
+        public string uuid { get; set; } = null!;
 
 		public string FirstName { get; set; } = null!;
 

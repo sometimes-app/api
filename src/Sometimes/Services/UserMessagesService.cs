@@ -17,24 +17,7 @@ namespace Sometimes.Services
         /// <inheritdoc/>
         public async Task<DisplayMessage?> GetDailyMessage(string uuid)
         {
-            var message = await DatabaseService.GetDailyMessage(uuid);
-            if (message == null)
-            {
-                return null;
-            }
-
-            var result = new DisplayMessage
-            {
-                messageId = message.messageId,
-                messageBody = message.messageBody,
-            };
-            if (!string.IsNullOrEmpty(message.senderUuid))
-            {
-                var senderInfo = await DatabaseService.GetUserInfoAsync(message.senderUuid);
-                if (senderInfo != null)
-                    result.senderName = senderInfo.FirstName + " " + senderInfo.LastName;
-            }
-            return result;
+            return await DatabaseService.GetDailyMessage(uuid);
         }
 
         /// <inheritdoc/>

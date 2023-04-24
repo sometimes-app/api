@@ -16,7 +16,7 @@ namespace Sometimes.Database.Models
     {
         public string _id { get; set; } = null!;
         public string messageId { get; set; } = null!;
-        public DateTime? sentTime { get; set; }
+        public DateTime sentTime { get; set; }
         public string body { get; set; } = null!;
         public string? senderUuid { get; set; }
         public DateTime? readTime { get; set; }

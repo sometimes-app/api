@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
@@ -40,16 +41,16 @@ namespace Sometimes.Database
             await UserInfoCollection.Find(_ => true).ToListAsync();
 
         public async Task<UserInfo?> GetUserInfoAsync(string id) =>
-            await UserInfoCollection.Find(x => x.UUID == id).FirstOrDefaultAsync();
+            await UserInfoCollection.Find(x => x.uuid == id).FirstOrDefaultAsync();
 
         public async Task CreateUserInfoAsync(UserInfo newUser) =>
             await UserInfoCollection.InsertOneAsync(newUser);
 
         public async Task UpdateUserInfoAsync(string id, UserInfo userInfo) =>
-            await UserInfoCollection.ReplaceOneAsync(x => x.UUID == id, userInfo);
+            await UserInfoCollection.ReplaceOneAsync(x => x.uuid == id, userInfo);
 
         public async Task RemoveUserInfoAsync(string id) =>
-            await UserInfoCollection.DeleteOneAsync(x => x.UUID == id);
+            await UserInfoCollection.DeleteOneAsync(x => x.uuid == id);
 
         /// <inheritdoc/>
         public async Task<List<UserInfo>?> GetFriends(string uuid)
@@ -61,7 +62,7 @@ namespace Sometimes.Database
             }
 
             FilterDefinitionBuilder<UserInfo> friendListFilterBuilder = new();
-            var friendListFilter = friendListFilterBuilder.In(user => user.UUID, userInfo.Friends);
+            var friendListFilter = friendListFilterBuilder.In(user => user.uuid, userInfo.Friends);
             return await UserInfoCollection.Find(friendListFilter).ToListAsync();
         }
 
@@ -69,7 +70,7 @@ namespace Sometimes.Database
         public async Task<bool> AddFriend(string userUuid, string friendUuid)
         {
             var addFriend = Builders<UserInfo>.Update.AddToSet(user => user.Friends, friendUuid);
-            var result = await UserInfoCollection.UpdateOneAsync(user => user.UUID == userUuid, addFriend);
+            var result = await UserInfoCollection.UpdateOneAsync(user => user.uuid == userUuid, addFriend);
             return result.IsAcknowledged;
         }
 
@@ -77,73 +78,36 @@ namespace Sometimes.Database
         public async Task<bool> RemoveFriend(string userUuid, string friendUuid)
         {
             var removeFriend = Builders<UserInfo>.Update.Pull(user => user.Friends, friendUuid);
-            var result = await UserInfoCollection.UpdateOneAsync(user => user.UUID == userUuid, removeFriend);
+            var result = await UserInfoCollection.UpdateOneAsync(user => user.uuid == userUuid, removeFriend);
             return result.IsAcknowledged;
         }
 
         public async Task<DisplayMessage?> GetDailyMessage(string uuid)
         {
-            //var unreadMessages = await UserMessagesCollection.AsQueryable()
-            //    .SelectMany(f => f.messages)
-            //    .Where(m => !m.read)
-            //    .ToListAsync();
-
-
-
-            var unreadMessages2 = await UserMessagesCollection.Aggregate()
+            var unreadMessagesWithUserInfo = await UserMessagesCollection.Aggregate()
                 .Match(user => user.uuid == uuid)
                 .Unwind(u => u.messages)
                 .Match(m => !m["messages"]["read"].AsBoolean)
                 .Lookup<UserInfo, BsonDocument>(
                     UserInfoCollectionName,
-                    "messages.$.senderUuid",
+                    "messages.senderUuid",
                     "uuid",
                     "senderInfo"
                 )
                 .ToListAsync();
 
-            //var unreadMessages = await UserMessagesCollection.Aggregate()
-            //    .Match(user => user.uuid == uuid)
-            //    .Unwind(u => u.messages)
-            //    .Match(m => !m["messages"]["read"].AsBoolean)
-            //    .Lookup(
-            //        UserInfoCollectionName,
-            //        u => u["uuid"],
-            //        m => m["uuid"],
-            //        (messages, users) => new BsonDocument
-            //        {
-            //            { "uuid": users["uuid"] }
-            //        }
-
-
-            //    )
-            //    .Project(p => new
-            //    {
-            //        UserId = p["UserId"],
-            //        Username = p["Username"],
-            //        Messages = p["Messages"]
-            //            .AsBsonArray
-            //            .Select(x => new BsonDocument("read", x["read"])
-            //                .Add("text", x["text"])
-            //                .Add("timestamp", x["timestamp"])
-            //            )
-            //            .ToList()
-            //    })
-            //    .ToListAsync();
-
-            if (unreadMessages2.Count > 0)
+            if (unreadMessagesWithUserInfo.Count > 0)
             {
-                var message = unreadMessages2.ElementAt(new Random().Next(0, unreadMessages2.Count));
-                return new DisplayMessage();
-                //{
-                //    uuid = message
-                //    messageId
-                //    sentTime
-                //    messageBody
-                //    senderName
-                //    senderUuid
-                //}
-
+                var dailyMessage = unreadMessagesWithUserInfo.ElementAt(new Random().Next(0, unreadMessagesWithUserInfo.Count));
+                return new DisplayMessage
+                {
+                    uuid = dailyMessage["uuid"].AsString,
+                    messageId = dailyMessage["messages"]["messageId"].AsString,
+                    sentTime = dailyMessage["messages"]["sentTime"].ToUniversalTime(),
+                    messageBody = dailyMessage["messages"]["body"].AsString,
+                    senderName = CreateSenderName(dailyMessage),
+                    senderUuid = dailyMessage["messages"]["senderUuid"].AsString
+                };
             }
             else
             {
@@ -192,6 +156,13 @@ namespace Sometimes.Database
             var value = await UserMessagesCollection.UpdateOneAsync(findMessageFilter, updateRead);
 
             return value is not null ? true : false;
+        }
+
+        private static string CreateSenderName(BsonDocument? doc)
+        {
+            BsonDocument document = doc.ValidatedNullable()!;
+            BsonValue senderInfo = document["senderInfo"].AsBsonArray.Single();
+            return senderInfo["FirstName"].AsString + " " + senderInfo["LastName"];
         }
     }
 }

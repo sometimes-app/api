@@ -372,6 +372,9 @@ components:
     UserInfo:
       type: object
       properties:
+        _id:
+          type: string
+          nullable: true
         uuid:
           type: string
           nullable: true
